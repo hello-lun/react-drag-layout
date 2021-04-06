@@ -1,8 +1,5 @@
-import JsonData from './edit-data.json'
-import {ReactVisualEditor} from "./packages/ReactVisualEditor";
 import './app.scss'
 import {useState} from "react";
-import {visualEditorBaseOption} from "./visual.config";
 import {Input, notification} from 'antd'
 
 function App() {
@@ -27,24 +24,7 @@ function App() {
 
     return (
         <div className="app">
-            <ReactVisualEditor formData={formData}
-                               option={visualEditorBaseOption}
-                               value={JsonData as any}
-                               customBlockProps={customProps}
-                               onUpdateFormData={setFormData}>
-                {{
-                    editUsername: ({model}) => {
-                        return (
-                            formData.food !== 'dangao' ?
-                                <input type="text" {...model.modelValue}/> :
-                                <Input {...model.modelValue}/>
-                        )
-                    }
-                }}
-            </ReactVisualEditor>
-            <div style={{textAlign: 'center'}}>
-                {JSON.stringify(formData)}
-            </div>
+            <h1>hello world</h1>
         </div>
     )
 }
