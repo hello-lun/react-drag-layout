@@ -4,7 +4,8 @@ import {
   ReactVisualEditorValue,
   ReactVisualEditorConfig,
   ReactVisualEditorComponent,
-  createVisualBlock } from './ReactVisualEditor.utils';
+  createVisualBlock, 
+  ReactVisualEditorBlock} from './ReactVisualEditor.utils';
 import {ReactVisualBlock} from './ReactVisualBlock';
 import { useCallbackRef } from './hook/useCallbackRef';
 
@@ -25,10 +26,41 @@ export const ReactVisualEditor: React.FC<{
     props.value.container.width,
   ])
 
+  const focusData = useMemo(() => {
+    const focus: ReactVisualEditorBlock[] = []
+    const unFocus: ReactVisualEditorBlock[] = []
+    props.value.blocks.forEach(block => {
+      (block.focus ? focus : unFocus).push(block)
+    })
+
+    return {
+      focus,
+      unFocus
+    }
+  }, [props.value.blocks])
+
+  const methods = {
+    updateBlocks: (blocks: ReactVisualEditorBlock[]) => {
+      props.onChange({
+        ...props.value,
+        blocks: [...blocks]
+      })
+    },
+    clearFocus: (external?: ReactVisualEditorBlock) => {
+      let data = !!external ? focusData.focus.filter(item => item !== external) : focusData.focus;
+
+      data.forEach(block => {
+        block.focus = false
+      })
+
+      methods.updateBlocks(props.value.blocks)
+
+    }
+  }
+
   const containerRef = useRef({} as HTMLDivElement)
 
   const menuDraggier = (() => {
-
     const dragData = useRef({
       dragComponent: null as null | ReactVisualEditorComponent
     })
@@ -78,6 +110,37 @@ export const ReactVisualEditor: React.FC<{
 
   })();
 
+  const focusHandler = (() => {
+    const block = (e: React.MouseEvent<HTMLDivElement>, block: ReactVisualEditorBlock) => {
+      if (e.shiftKey) {
+        /*如果摁住了shift键，如果此时没有选中的block，就选中这个block，否则令这个block的选中状态去翻*/
+        if (focusData.focus.length <= 1) {
+            block.focus = true
+        } else {
+            block.focus = !block.focus
+        }
+        methods.updateBlocks(props.value.blocks)
+      } else {
+          /*如果点击的这个block没有被选中，才清空这个其他选中的block，否则不做任何事情。放置拖拽多个block，取消其他block的选中状态*/
+          if (!block.focus) {
+              block.focus = true
+              methods.clearFocus(block)
+          }
+      }
+    }
+    
+    const container = (e: React.MouseEvent<HTMLDivElement>) => {
+      if(e.target !== e.currentTarget) return
+
+      if(!e.shiftKey) methods.clearFocus()
+    }
+
+    return {
+      block,
+      container
+    }
+  })()
+
   return (
     <div className="react-visual-editor">
       <div className="react-visual-editor-menu">
@@ -101,13 +164,18 @@ export const ReactVisualEditor: React.FC<{
       <div className="react-visual-editor-head">head</div>
       <div className="react-visual-editor-operator">operator</div>
       <div className="react-visual-editor-body">
-        <div className="react-visual-editor-container" style={containerStyles} ref={containerRef}>
+        <div
+          className="react-visual-editor-container"
+          style={containerStyles}
+          ref={containerRef}
+          onMouseDown={focusHandler.container}>
           {
             props.value.blocks.map((block, index) => (
               <ReactVisualBlock
                 key={index}
                 block={block}
                 config={props.config}
+                onMouseDown={(e) => focusHandler.block(e, block)}
               />
             ))
           }

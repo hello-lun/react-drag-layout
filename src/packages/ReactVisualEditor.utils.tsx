@@ -3,6 +3,7 @@ export interface ReactVisualEditorBlock {
   top: number,
   left: number,
   adjustPosition: boolean,
+  focus: boolean
 }
 
 export interface ReactVisualEditorValue {
@@ -37,6 +38,7 @@ export function createVisualBlock(
     top,
     left,
     adjustPosition: true,
+    focus: false
   }
 }
 
